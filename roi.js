@@ -1,38 +1,60 @@
-const revenueEl = document.querySelector("#revenue");
-const DSOEL = document.querySelector("#dso");
-const peopleEl = document.querySelector("#people");
-const salaryEl = document.querySelector("#salary");
-const defaultHEl = document
-  .querySelector("#default__h")
+const revenue_input_element = document.querySelector("#revenue");
+const dso_input_element = document.querySelector("#dso");
+const people_input_element = document.querySelector("#people");
+const salary_input_element = document.querySelector("#salary");
+const revenue_value = revenue_input_element.getAttribute("data-default");
+const dso_value = dso_input_element.getAttribute("data-default");
+const people_value = people_input_element.getAttribute("data-default");
+const salary_value = salary_input_element.getAttribute("data-default");
+const default_working_cap_value = document
+  .querySelector("#default-capital")
   .getAttribute("data-value");
-const res = document.querySelector(".below-result");
-const res2 = document.querySelector(".res__2");
-const res4 = document.querySelector(".aging-result");
-const res3 = document.querySelector(".result-container");
-const defaultPEl = document
-  .querySelector("#default__m")
+const default_productivity_value = document
+  .querySelector("#default-productivity")
   .getAttribute("data-value");
-const humanOptions = Array.from(document.querySelectorAll(".workingc"));
 
-const productivityOptions = Array.from(
-  document.querySelectorAll(".productivity")
+const working_capital_values = Array.from(
+  document.querySelectorAll(".capital-tabs-link")
 );
-const r = document.querySelectorAll(".radio");
+
+const productivity_capital_value = Array.from(
+  document.querySelectorAll(".productivity-tabs-link")
+);
 const currentInput = document.querySelector("#current__input");
 const daysOneInput = document.querySelector("#days__one__input");
 const daysTwoInput = document.querySelector("#days__two__input");
 const daysThreeInput = document.querySelector("#days__three__input");
-const inputs = document.querySelectorAll(".input");
-const errorText = document.querySelector(".error-message");
+const currentInput_value = currentInput.getAttribute("data-default");
+const daysOneInput_value = daysOneInput.getAttribute("data-default");
+const daysTwoInput_value = daysTwoInput.getAttribute("data-default");
+const daysThreeInput_value = daysThreeInput.getAttribute("data-default");
+const tabSwitch = document.querySelectorAll(".tabl-link");
+const inputs = document.querySelectorAll(".inputs");
+const errorText = document.querySelector(".error-text");
+const result_dso_working = document
+  .querySelector(".working-capital-tabs")
+  .querySelectorAll(".w-tab-pane");
 
-let val;
+const result_productivity_working = document
+  .querySelector(".productivity-capital-tabs")
+  .querySelectorAll(".w-tab-pane");
+
+const top_result = document.querySelector(".top-result-area");
+
+let current_tab = "DSO";
+let value_res;
+
 const stateObj = {
-  revenue: isNaN(parseInt(revenueEl.value)) ? 0 : parseInt(revenueEl.value),
-  DSO: isNaN(parseInt(DSOEL.value)) ? 0 : parseInt(DSOEL.value),
-  people: isNaN(parseInt(peopleEl.value)) ? 0 : parseInt(peopleEl.value),
-  salary: isNaN(parseInt(salaryEl.value)) ? 0 : parseInt(salaryEl.value),
-  defaultH: isNaN(parseInt(defaultHEl)) ? 0 : parseInt(defaultHEl),
-  defaultP: isNaN(parseInt(defaultPEl)) ? 0 : parseInt(defaultPEl),
+  revenue: isNaN(parseInt(revenue_value)) ? 0 : parseInt(revenue_value),
+  DSO: isNaN(parseInt(dso_value)) ? 0 : parseInt(dso_value),
+  people: isNaN(parseInt(people_value)) ? 0 : parseInt(people_value),
+  salary: isNaN(parseInt(salary_value)) ? 0 : parseInt(salary_value),
+  defaultH: isNaN(parseInt(default_working_cap_value))
+    ? 0
+    : parseInt(default_working_cap_value),
+  defaultP: isNaN(parseInt(default_productivity_value))
+    ? 0
+    : parseInt(default_productivity_value),
   noOfDays: 0,
   cashFlow: 0,
   workingCapital: 0,
@@ -40,13 +62,18 @@ const stateObj = {
   productivitySave: 0,
   finalSave: 0,
 };
+
 const AgingState = {
-  current__input: parseInt(currentInput.value),
-  days__one__input: parseInt(daysOneInput.value),
-  days__two__input: parseInt(daysTwoInput.value),
-  days__three__input: parseInt(daysThreeInput.value),
-  defaultH: isNaN(parseInt(defaultHEl)) ? 0 : parseInt(defaultHEl),
-  defaultP: isNaN(parseInt(defaultPEl)) ? 0 : parseInt(defaultPEl),
+  current__input: parseInt(currentInput_value),
+  days__one__input: parseInt(daysOneInput_value),
+  days__two__input: parseInt(daysOneInput_value),
+  days__three__input: parseInt(daysTwoInput_value),
+  defaultH: isNaN(parseInt(default_working_cap_value))
+    ? 0
+    : parseInt(default_working_cap_value),
+  defaultP: isNaN(parseInt(default_productivity_value))
+    ? 0
+    : parseInt(default_productivity_value),
   current__inputVal: 0,
   days__one__inputVal: 0,
   days__two__inputVal: 0,
@@ -55,209 +82,215 @@ const AgingState = {
   opCost: 0,
   AgingFinalSave: 0,
 };
-const forMatter = (num) => {
-  return new Intl.NumberFormat("en-US", {
+function handleCurrentTab(tab) {
+  current_tab = tab === "Tab 2" ? "AGING_SPLIT" : "DSO";
+
+  if (tab === "Tab 1") {
+    errorText.classList.add("hide-error");
+  }
+}
+tabSwitch.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    handleCurrentTab(tab.getAttribute("data-w-tab"));
+    updateTree();
+  });
+});
+
+const forMatter = (t) =>
+  new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     maximumSignificantDigits: 3,
-  }).format(num);
-};
-const template = () => {
-  return `<div  id="w-node-a143d1e2-173e-04c9-f7c6-61d890ff6453-90ff63c9"
-                    data-w-id="a143d1e2-173e-04c9-f7c6-61d890ff6453"
-                    class="text-block-64">
-                     You just accelerated
-                    <strong class="highlight-color-text">${forMatter(
-                      stateObj.revenue
-                    )}</strong>
-                    <br />of your revenue by
-                    <strong class="highlight-color-text"> ${forMatter(
-                      stateObj.noOfDays
-                    )} days,</strong>
-                    providing <br />additional cash flow of
-                    <strong class="highlight-color-text">${forMatter(
-                      stateObj.cashFlow
-                    )} </strong
-                    ><br />and saved your enterprise <br /><strong
-                      class="highlight-color-text"
-                      >${forMatter(stateObj.workingCapital)} </strong
-                    >in working capital savings!
-                   
-                  </div>
+  }).format(t);
 
-          <div data-w-id="a143d1e2-173e-04c9-f7c6-61d890ff6467" class="text-block-64">
-                    You will also save
-                    <strong class="highlight-color-text blue-highlight"
-                      >${forMatter(stateObj.youSave)}</strong
-                    ><br />for
-                    <strong class="highlight-color-text">${
-                      stateObj.noOfDays
-                    } days</strong>
-                    Growfin saves you, <br />as reduced DSO savings.
-                  </div>`;
-};
-const template2 = () => {
-  return `  <div class="text-block-64">
-                    You will save
-                    <strong class="highlight-color-text blue-highlight"
-                      >${forMatter(stateObj.productivitySave)}</strong
-                    ><br />with increased productivity!
-                  </div>`;
-};
-const template3 = () => {
-  return `<div class="text-block-61">Congratulations!</div>
-                  <div class="text-block-62">
-                    You will save <span class="text-span-13">${forMatter(
-                      stateObj.finalSave
-                    )}</span> with
-                    Growfin!
-                  </div>
-                  <div class="text-block-63">Here is how?</div>`;
-};
-const templateAging = () => {
-  return `<div class="text-block-61">Congratulations!</div>
-                  <div class="text-block-62">
-                    You will save <span class="text-span-13">${forMatter(
-                      AgingState.AgingFinalSave
-                    )}</span> with
-                    Growfin!
-                  </div>
-                  <div class="text-block-63">Here is how?</div>`;
-};
+const dso_working_template = () =>
+  ` <div class="dso-text-result">Growfin can reduce your DSO by <br><span class="dso-days">${
+    stateObj.noOfDays
+  } days</span>, saving you <span class="dso-amt">${forMatter(
+    stateObj.workingCapital
+  )}</span> in Working Capital and <span class="result">${forMatter(
+    stateObj.youSave
+  )}</span> as reduced DSO savings.</div>`;
+
+const aging_working_template = () =>
+  `<div class="dso-text-result">You just accelerated<span class="dso-amt">${forMatter(
+    AgingState.totalAgingSave
+  )}</span> leading to savings of <span class="result">${forMatter(
+    AgingState.opCost
+  )}</span>in opportunity cost.</div>`;
+
+const top_result_template = () => `<div class="text-block-71">
+                  You will save <span class="result-value">${
+                    current_tab === "DSO"
+                      ? forMatter(stateObj.finalSave)
+                      : forMatter(AgingState.AgingFinalSave)
+                  }</span> with
+                  Growfin
+                </div>`;
+
+const productivity_template = () => `<div class="productivity--text">
+                            You will also save
+                            <span class="result">${forMatter(
+                              stateObj.productivitySave
+                            )}</span> <br />With
+                            increased productivity
+                          </div>`;
+
 const DSOCalculator = () => {
-  stateObj.noOfDays = Math.round((stateObj.defaultH / 100) * stateObj.DSO);
-  stateObj.cashFlow = Math.round((stateObj.defaultH / 100) * stateObj.revenue);
-  stateObj.workingCapital = Math.round(
-    stateObj.revenue * (stateObj.noOfDays / 365)
-  );
-  stateObj.youSave = Math.round((7 / 100) * stateObj.workingCapital);
-  stateObj.productivitySave = Math.round(
-    (stateObj.defaultP / 100) * stateObj.salary * stateObj.people
-  );
-  stateObj.finalSave = Math.round(stateObj.youSave + stateObj.productivitySave);
+  (stateObj.noOfDays = Math.round((stateObj.defaultH / 100) * stateObj.DSO)),
+    (stateObj.cashFlow = Math.round(
+      (stateObj.defaultH / 100) * stateObj.revenue
+    )),
+    (stateObj.workingCapital = Math.round(
+      stateObj.revenue * (stateObj.noOfDays / 365)
+    )),
+    (stateObj.youSave = Math.round(0.07 * stateObj.workingCapital)),
+    (stateObj.productivitySave = Math.round(
+      (stateObj.defaultP / 100) * stateObj.salary * stateObj.people
+    )),
+    (stateObj.finalSave = Math.round(
+      stateObj.youSave + stateObj.productivitySave
+    ));
 };
-const handleChange = () => {
-  revenueEl.addEventListener("input", (e) => {
-    stateObj.revenue =
-      e.target.value === "" || e.target.value === typeof ""
-        ? 0
-        : parseInt(e.target.value);
-    DSOCalculator();
-    AgingCalculator();
-    updateTree();
-  });
-  DSOEL.addEventListener("input", (e) => {
-    stateObj.DSO =
-      e.target.value === "" || e.target.value === typeof ""
-        ? 0
-        : parseInt(e.target.value);
-    DSOCalculator();
-    updateTree();
-  });
-  peopleEl.addEventListener("input", (e) => {
-    stateObj.people =
-      e.target.value === "" || e.target.value === typeof ""
-        ? 0
-        : parseInt(e.target.value);
-    DSOCalculator();
-    AgingCalculator();
-    updateTree();
-  });
-  salaryEl.addEventListener("input", (e) => {
-    stateObj.salary =
-      e.target.value === "" || e.target.value === typeof ""
-        ? 0
-        : parseInt(e.target.value);
-    DSOCalculator();
-    AgingCalculator();
-    updateTree();
-  });
-  humanOptions.forEach((option) => {
-    option.addEventListener("click", (e) => {
-      const attr = option.getAttribute("data-value");
 
-      stateObj.defaultH = parseInt(attr);
-      DSOCalculator();
-      AgingCalculator();
-      updateTree();
-    });
-  });
-  productivityOptions.forEach((option) => {
-    option.addEventListener("click", (e) => {
-      const attr = option.getAttribute("data-value");
+function megaTotal() {
+  const current_state = {
+    current_currentInput: isNaN(parseInt(currentInput.value))
+      ? parseInt(currentInput_value)
+      : parseInt(currentInput.value),
+    current_daysOneInput: isNaN(parseInt(daysOneInput.value))
+      ? parseInt(daysOneInput_value)
+      : parseInt(daysOneInput.value),
+    current_daysTwoInput: isNaN(parseInt(daysTwoInput.value))
+      ? parseInt(daysTwoInput_value)
+      : parseInt(daysTwoInput.value),
+    current_daysThreeInput: isNaN(parseInt(daysThreeInput.value))
+      ? parseInt(daysThreeInput_value)
+      : parseInt(daysThreeInput.value),
+  };
+  value_res =
+    current_state.current_currentInput +
+    current_state.current_daysOneInput +
+    current_state.current_daysTwoInput +
+    current_state.current_daysThreeInput;
+}
 
-      stateObj.defaultP = parseInt(attr);
-      DSOCalculator();
-      AgingCalculator();
-      updateTree();
-    });
-  });
-};
-const megaTotal = () => {
-  return (val =
-    parseInt(currentInput.value) +
-    parseInt(daysOneInput.value) +
-    parseInt(daysTwoInput.value) +
-    parseInt(daysThreeInput.value));
-};
-inputs.forEach((input) => {
-  input.addEventListener("input", (e) => {
-    megaTotal();
-    AgingState[input.id] =
-      e.target.value === "" || e.target.value === typeof ""
-        ? 0
-        : parseInt(e.target.value);
-    if (val > 100 || val < 100) {
-      inputs.forEach((input) => {
-        input.classList.add("error");
-      });
-      errorText.classList.remove("hide-error");
-    } else {
-      inputs.forEach((input) => {
-        input.classList.remove("error");
-      });
-      errorText.classList.add("hide-error");
-      AgingCalculator();
-      updateTree();
-    }
+inputs.forEach((t) => {
+  t.addEventListener("input", (e) => {
+    megaTotal(),
+      (AgingState[t.id] =
+        "" === e.target.value || "string" === e.target.value
+          ? 0
+          : parseInt(e.target.value)),
+      value_res > 100 || value_res < 100
+        ? (inputs.forEach((t) => {
+            t.classList.add("error");
+          }),
+          errorText.classList.remove("hide-error"))
+        : (inputs.forEach((t) => {
+            t.classList.remove("error");
+          }),
+          errorText.classList.add("hide-error"),
+          AgingCalculator(),
+          updateTree());
   });
 });
 const AgingCalculator = () => {
-  AgingState.current__inputVal = Math.round(
+  (AgingState.current__inputVal = Math.round(
     (AgingState.current__input / 100) *
       stateObj.revenue *
       (stateObj.defaultH / 100)
-  );
-  AgingState.days__one__inputVal = Math.round(
-    (AgingState.days__one__input / 100) *
-      stateObj.revenue *
-      (stateObj.defaultH / 100)
-  );
-  AgingState.days__two__inputVal = Math.round(
-    (AgingState.days__two__input / 100) *
-      stateObj.revenue *
-      (stateObj.defaultH / 100)
-  );
-  AgingState.days__three__inputVal = Math.round(
-    (AgingState.days__three__input / 100) *
-      stateObj.revenue *
-      (stateObj.defaultH / 100)
-  );
-  AgingState.totalAgingSave =
-    AgingState.current__inputVal +
-    AgingState.days__one__inputVal +
-    AgingState.days__two__inputVal +
-    AgingState.days__three__inputVal;
-  AgingState.opCost = Math.round((7 / 100) * AgingState.totalAgingSave);
-  AgingState.AgingFinalSave = AgingState.opCost + stateObj.productivitySave;
+  )),
+    (AgingState.days__one__inputVal = Math.round(
+      (AgingState.days__one__input / 100) *
+        stateObj.revenue *
+        (stateObj.defaultH / 100)
+    )),
+    (AgingState.days__two__inputVal = Math.round(
+      (AgingState.days__two__input / 100) *
+        stateObj.revenue *
+        (stateObj.defaultH / 100)
+    )),
+    (AgingState.days__three__inputVal = Math.round(
+      (AgingState.days__three__input / 100) *
+        stateObj.revenue *
+        (stateObj.defaultH / 100)
+    )),
+    (AgingState.totalAgingSave =
+      AgingState.current__inputVal +
+      AgingState.days__one__inputVal +
+      AgingState.days__two__inputVal +
+      AgingState.days__three__inputVal),
+    (AgingState.opCost = Math.round(0.07 * AgingState.totalAgingSave)),
+    (AgingState.AgingFinalSave = AgingState.opCost + stateObj.productivitySave);
 };
 const updateTree = () => {
-  res.innerHTML = template();
-  res2.innerHTML = template2();
-  res3.innerHTML = template3();
-  res4.innerHTML = templateAging();
+  result_dso_working.forEach(
+    (content) =>
+      (content.innerHTML =
+        current_tab === "DSO"
+          ? dso_working_template()
+          : aging_working_template())
+  );
+  result_productivity_working.forEach(
+    (content) => (content.innerHTML = productivity_template())
+  );
+  top_result.innerHTML = top_result_template();
 };
-handleChange();
-DSOCalculator();
-AgingCalculator();
-updateTree();
+revenue_input_element.addEventListener("input", (t) => {
+  (stateObj.revenue =
+    "" === t.target.value || "string" === t.target.value
+      ? 0
+      : parseInt(t.target.value)),
+    DSOCalculator(),
+    AgingCalculator(),
+    updateTree();
+});
+dso_input_element.addEventListener("input", (t) => {
+  (stateObj.DSO =
+    "" === t.target.value || "string" === t.target.value
+      ? 0
+      : parseInt(t.target.value)),
+    DSOCalculator(),
+    updateTree();
+}),
+  people_input_element.addEventListener("input", (t) => {
+    (stateObj.people =
+      "" === t.target.value || "string" === t.target.value
+        ? 0
+        : parseInt(t.target.value)),
+      DSOCalculator(),
+      AgingCalculator(),
+      updateTree();
+  }),
+  salary_input_element.addEventListener("input", (t) => {
+    (stateObj.salary =
+      "" === t.target.value || "string" === t.target.value
+        ? 0
+        : parseInt(t.target.value)),
+      DSOCalculator(),
+      AgingCalculator(),
+      updateTree();
+  }),
+  working_capital_values.forEach((t) => {
+    t.addEventListener("click", (e) => {
+      const a = t.getAttribute("data-value");
+      (stateObj.defaultH = parseInt(a)),
+        DSOCalculator(),
+        AgingCalculator(),
+        updateTree();
+    });
+  }),
+  productivity_capital_value.forEach((t) => {
+    t.addEventListener("click", (e) => {
+      const a = t.getAttribute("data-value");
+      (stateObj.defaultP = parseInt(a)),
+        DSOCalculator(),
+        AgingCalculator(),
+        updateTree();
+    });
+  }),
+  DSOCalculator(),
+  AgingCalculator(),
+  updateTree();
+megaTotal();
