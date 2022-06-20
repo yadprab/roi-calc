@@ -66,8 +66,8 @@ const stateObj = {
 const AgingState = {
   current__input: parseInt(currentInput_value),
   days__one__input: parseInt(daysOneInput_value),
-  days__two__input: parseInt(daysOneInput_value),
-  days__three__input: parseInt(daysTwoInput_value),
+  days__two__input: parseInt(daysTwoInput_value),
+  days__three__input: parseInt(daysThreeInput_value),
   defaultH: isNaN(parseInt(default_working_cap_value))
     ? 0
     : parseInt(default_working_cap_value),
@@ -82,6 +82,38 @@ const AgingState = {
   opCost: 0,
   AgingFinalSave: 0,
 };
+
+const dso_tooltip_ele = document.querySelector(".dso-tooltip");
+
+const amt_tooltip_ele = document.querySelector(".amt-tooltip");
+const dso_result_tooltip_ele = document.querySelector(".workingc-tooltip");
+
+const prod_tooltip_ele = document.querySelector(".productivity-tooltip");
+
+const tooltip_dso = () =>
+  `<p class='tooltip-text'> ${stateObj.noOfDays}  days is calculated as  ${stateObj.defaultH}%  of your DSO, which is  ${stateObj.DSO}  days.</p> `;
+
+const tooltip_amt = () =>
+  `<p class='tooltip-text dso-tooltip-text'>This is the amount of revenues that you will collect in ${
+    stateObj.noOfDays
+  } days, given that you have to collect ${forMatter(
+    stateObj.revenue
+  )} in 365 days.
+     Calculated as (Revenues that need to be collected) multiplied by (${
+       stateObj.noOfDays
+     } days / 365 days)</p>`;
+
+const tooltip_dso_result = () => `
+ <p class='tooltip-text'> This is the interest realized on your working capital savings of ${stateObj.workingCapital} calculated as 7% of the amount.</p>
+`;
+
+const tooltip_aging_result = () => `
+   <p class='tooltip-text'>This is the interest realized on your working capital savings of ${AgingState.totalAgingSave} calculated as 7% of the amount.</p>
+`;
+
+const tooltip_prod = () =>
+  `<p class='tooltip-text'>Calculated as ${stateObj.defaultP}% of your total cost of resources, which is ${stateObj.salary} multiplied by ${stateObj.people} resources in this case.</p>`;
+
 function handleCurrentTab(tab) {
   current_tab = tab === "Tab 2" ? "AGING_SPLIT" : "DSO";
 
@@ -104,35 +136,39 @@ const forMatter = (t) =>
   }).format(t);
 
 const dso_working_template = () =>
-  ` <div class="dso-text-result">Growfin can reduce your DSO by <br><span class="dso-days">${
+  ` <div class="dso-text-result">Growfin can reduce your DSO by <br><span class="dso-days"> ${
     stateObj.noOfDays
-  } days</span>, saving you <span class="dso-amt">${forMatter(
+  }  days </span>,  saving you <span class="dso-amt">  ${forMatter(
     stateObj.workingCapital
-  )}</span> in Working Capital and <span class="result">${forMatter(
+  )}  </span> in Working Capital and <span class="result dso-result">  ${forMatter(
     stateObj.youSave
-  )}</span> as reduced DSO savings.</div>`;
+  )}  </span> as reduced DSO savings.</div>`;
 
 const aging_working_template = () =>
-  `<div class="dso-text-result">You just accelerated<span class="dso-amt">${forMatter(
+  `<div class="dso-text-result">You just accelerated<span class="dso-amt">  ${forMatter(
     AgingState.totalAgingSave
-  )}</span> leading to savings of <span class="result">${forMatter(
+  )}  </span>   leading to savings of <span class="result dso-result">  ${forMatter(
     AgingState.opCost
-  )}</span>in opportunity cost.</div>`;
+  )} </span>  in opportunity cost.</div>`;
 
-const top_result_template = () => `<div class="text-block-71">
-                  You will save <span class="result-value">${
+const top_result_template = () => `
+            <div class="tooltip result-tooltip hide">
+                <p class="tooltip-text">This is your sum total of working capital and productivity savings.</p>
+              </div>
+              <div class="text-block-71">
+                  You will save <span class="result-value"> ${
                     current_tab === "DSO"
                       ? forMatter(stateObj.finalSave)
                       : forMatter(AgingState.AgingFinalSave)
-                  }</span> with
+                  } </span>  with
                   Growfin
                 </div>`;
 
 const productivity_template = () => `<div class="productivity--text">
                             You will also save
-                            <span class="result">${forMatter(
+                             <span class="result productivity-result"> ${forMatter(
                               stateObj.productivitySave
-                            )}</span> <br />With
+                            )} </span>  <br />With
                             increased productivity
                           </div>`;
 
@@ -224,6 +260,7 @@ const AgingCalculator = () => {
     (AgingState.opCost = Math.round(0.07 * AgingState.totalAgingSave)),
     (AgingState.AgingFinalSave = AgingState.opCost + stateObj.productivitySave);
 };
+
 const updateTree = () => {
   result_dso_working.forEach(
     (content) =>
@@ -236,6 +273,55 @@ const updateTree = () => {
     (content) => (content.innerHTML = productivity_template())
   );
   top_result.innerHTML = top_result_template();
+
+  dso_tooltip_ele.innerHTML = tooltip_dso();
+  amt_tooltip_ele.innerHTML = tooltip_amt();
+  dso_result_tooltip_ele.innerHTML = tooltip_dso_result();
+  prod_tooltip_ele.innerHTML = tooltip_prod();
+  const result_value = document.querySelector(".result-value");
+  const r = document.querySelector(".result-tooltip");
+  const dso_days = document.querySelectorAll(".dso-days");
+  const dso_amt_re = document.querySelectorAll(".dso-amt");
+  result_value.addEventListener("mouseenter", (e) => {
+    r.classList.remove("hide");
+  });
+  result_value.addEventListener("mouseleave", (e) => {
+    r.classList.add("hide");
+  });
+  dso_days.forEach((ele) => {
+    ele.addEventListener("mouseenter", (e) => {
+      dso_tooltip_ele.classList.remove("hide");
+    });
+    ele.addEventListener("mouseleave", (e) => {
+      dso_tooltip_ele.classList.add("hide");
+    });
+  });
+  dso_amt_re.forEach((ele) => {
+    ele.addEventListener("mouseenter", (e) => {
+      amt_tooltip_ele.classList.remove("hide");
+    });
+    ele.addEventListener("mouseleave", (e) => {
+      amt_tooltip_ele.classList.add("hide");
+    });
+  });
+  const dso_result = document.querySelectorAll(".dso-result");
+  dso_result.forEach((ele) => {
+    ele.addEventListener("mouseenter", (e) => {
+      dso_result_tooltip_ele.classList.remove("hide");
+    });
+    ele.addEventListener("mouseleave", (e) => {
+      dso_result_tooltip_ele.classList.add("hide");
+    });
+  });
+  const prod_working = document.querySelectorAll(".productivity-result");
+  prod_working.forEach((ele) => {
+    ele.addEventListener("mouseenter", (e) => {
+      prod_tooltip_ele.classList.remove("hide");
+    });
+    ele.addEventListener("mouseleave", (e) => {
+      prod_tooltip_ele.classList.add("hide");
+    });
+  });
 };
 revenue_input_element.addEventListener("input", (t) => {
   (stateObj.revenue =
@@ -279,6 +365,7 @@ dso_input_element.addEventListener("input", (t) => {
         DSOCalculator(),
         AgingCalculator(),
         updateTree();
+      up();
     });
   }),
   productivity_capital_value.forEach((t) => {
